@@ -1,1 +1,2 @@
 com.fibbery.cli.command.TopicCommand
+com.fibbery.cli.command.QuitCommand

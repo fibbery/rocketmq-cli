@@ -7,15 +7,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.admin.MQAdminExt;
+import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.impl.completer.AggregateCompleter;
+import org.jline.reader.impl.completer.ArgumentCompleter;
+import org.jline.reader.impl.completer.NullCompleter;
+import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.ServiceLoader;
+import java.util.*;
 
 public class Cli {
 
@@ -32,14 +35,15 @@ public class Cli {
         commander.parse(args);
 
         startMqAdmin(mainArgs);
-        initCommands();
+        List<Completer> completers = initCommands();
+
 
         Terminal terminal = TerminalBuilder.terminal();
-        LineReader lineReader = LineReaderBuilder.builder().terminal(terminal).build();
+        LineReader lineReader = LineReaderBuilder.builder().completer(new AggregateCompleter(completers)).terminal(terminal).build();
 
         String line = "";
         while (true) {
-            line = lineReader.readLine("rocket-cli[] > ");
+            line = lineReader.readLine("rocket-cli > ");
             if (StringUtils.isEmpty(line.trim())) {
                 continue;
             }
@@ -49,7 +53,6 @@ public class Cli {
                 System.out.println("please enter conrrect command!!!");
                 continue;
             }
-
             cmd.execute(cmdArgs.length < 2 ? null : Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length));
 
         }
@@ -57,13 +60,16 @@ public class Cli {
     }
 
     /**
-     * init command map
+     * init command map and generate command completer
      */
-    private static void initCommands() {
+    private static List<Completer> initCommands() {
+        List<Completer> completers = new ArrayList<>();
         ServiceLoader<ICommand> loader = ServiceLoader.load(ICommand.class);
         for (ICommand cmd : loader) {
             COMMANDS.put(cmd.getIdentifier(), cmd);
+            completers.add(new ArgumentCompleter(new StringsCompleter(cmd.getIdentifier()), NullCompleter.INSTANCE));
         }
+        return completers;
     }
 
     /**

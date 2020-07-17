@@ -1,7 +1,5 @@
 package com.fibbery.cli.command;
 
-import java.util.List;
-
 public interface ICommand {
 
     /**

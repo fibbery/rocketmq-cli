@@ -2,26 +2,17 @@ package com.fibbery.cli.command;
 
 
 import com.fibbery.cli.consts.CommandConsts;
-import io.bretty.console.table.Alignment;
-import io.bretty.console.table.ColumnFormatter;
-import io.bretty.console.table.Table;
+import com.fibbery.cli.utils.TableUtils;
 import lombok.Data;
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
-import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.admin.TopicOffset;
 import org.apache.rocketmq.common.admin.TopicStatsTable;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -29,7 +20,9 @@ import static com.fibbery.cli.Cli.MQ_ADMIN;
 
 public class TopicCommand implements ICommand {
 
-    private static final String[] TABLE_HEADER = new String[]{"broker name", "queue id", "min offset", "max offset", "last update time"};
+    private static final String[] HEADERS = new String[]{"BrokerName", "QueueId", "MinOffset", "MaxOffset", "LastUpdateTime"};
+
+    private static final FastDateFormat DATE_FORMAT = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss,SSS");
 
     @Override
     public String getIdentifier() {
@@ -37,7 +30,7 @@ public class TopicCommand implements ICommand {
     }
 
     @Override
-    public void execute(String[] args){
+    public void execute(String[] args) {
         if (args == null || args.length != 1) {
             System.out.println("must enter topic name !");
             return;
@@ -51,8 +44,7 @@ public class TopicCommand implements ICommand {
             }
             HashMap<MessageQueue, TopicOffset> offsetTable = topicStatsTable.getOffsetTable();
             String[][] data = parseData(offsetTable);
-            Table table = Table.of(TABLE_HEADER, data, ColumnFormatter.text(Alignment.LEFT, 10));
-            System.out.println(table);
+            TableUtils.printTable(HEADERS, data);
         } catch (InterruptedException | MQBrokerException | MQClientException | RemotingException e) {
             e.printStackTrace();
         }
@@ -65,7 +57,12 @@ public class TopicCommand implements ICommand {
     }
 
     private String[][] parseData(HashMap<MessageQueue, TopicOffset> offsetTable) {
-        return offsetTable.entrySet().stream().map(TopicStatus::assemble).map(s -> {
+        return offsetTable.entrySet().stream().map(TopicStatus::assemble).sorted((a, b) -> {
+            if (a.getBrokerName().compareTo(b.getBrokerName()) == 0) {
+                return a.getQueueId() - b.getQueueId();
+            }
+            return a.getBrokerName().compareTo(b.getBrokerName());
+        }).map(s -> {
             String[] fields = new String[5];
             fields[0] = s.getBrokerName();
             fields[1] = String.valueOf(s.getQueueId());
@@ -94,7 +91,7 @@ public class TopicCommand implements ICommand {
             status.setQueueId(entry.getKey().getQueueId());
             status.setMinOffset(entry.getValue().getMinOffset());
             status.setMaxOffset(entry.getValue().getMaxOffset());
-            status.setLastUpdateTime(UtilAll.timeMillisToHumanString(entry.getValue().getLastUpdateTimestamp()));
+            status.setLastUpdateTime(DATE_FORMAT.format(entry.getValue().getLastUpdateTimestamp()));
             return status;
         }
     }
