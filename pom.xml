@@ -9,6 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
+        <jline.version>3.6.2</jline.version>
         <jcommander.version>1.78</jcommander.version>
         <commons-lang3.version>3.9</commons-lang3.version>
         <rocketmq-tools.version>4.4.0</rocketmq-tools.version>
@@ -22,9 +23,24 @@
             <version>${jcommander.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline</artifactId>
+            <version>${jline.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons-lang3.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.bretty</groupId>
+            <artifactId>console-table-builder</artifactId>
+            <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.4</version>
         </dependency>
         <dependency>
             <groupId>org.apache.rocketmq</groupId>

@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 public class NameServerAddressValidator implements IValueValidator<String>{
 
 
+    @Override
     public void validate(String name, String value) throws ParameterException {
         if (StringUtils.isEmpty(value)) {
             throw new ParameterException("NameServer address can't be null!!");
@@ -14,7 +15,7 @@ public class NameServerAddressValidator implements IValueValidator<String>{
 
         String[] addresses = value.split(";");
         for (String address : addresses) {
-            boolean valid = address.matches("(\\d+\\.\\d+\\.\\d+\\.\\d+)\\:(\\d+)");
+            boolean valid = address.matches("(\\d+\\.\\d+\\.\\d+\\.\\d+):(\\d+)");
             if (!valid) {
                 throw new ParameterException("NameServer address is illegal!!");
             }
